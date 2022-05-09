@@ -1,12 +1,38 @@
 const router = require("express").Router();
 const userModel = require("../model/User");
+const movieModel = require("../model/Movie");
+
 const bcrypt = require("bcryptjs");
 router.post("/signup", async (req, res) => {
-  const User = new userModel(req.body);
+  const { Favorites, ...User } = req.body;
+
+  var fav = [];
   try {
-    const hashedPassword = await bcrypt.hash(User.Password, 12);
-    User.Password = hashedPassword;
-    const savedUser = await User.save();
+    Favorites.map(async (item) => {
+      console.log(item._id);
+      fav.push(item._id);
+      try {
+        const movie = await movieModel.findOne({ _id: item._id });
+
+        const newRating =
+          (movie.AverageRatings * movie.NumberOfRatings + item.rating) /
+          (movie.NumberOfRatings + 1);
+
+        console.log("new rat", newRating);
+        movie.AverageRatings = newRating;
+        movie.NumberOfRatings++;
+        await movie.save();
+      } catch (error) {
+        console.log(error.message);
+      }
+    });
+    console.log(fav);
+
+    const MainUser = new userModel(req.body);
+    MainUser.Favorites = fav;
+    const hashedPassword = await bcrypt.hash(MainUser.Password, 12);
+    MainUser.Password = hashedPassword;
+    const savedUser = await MainUser.save();
 
     res.status(200).send(savedUser);
   } catch (error) {
