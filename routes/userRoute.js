@@ -1,9 +1,11 @@
 const router = require("express").Router();
 const userModel = require("../model/User");
-
+const bcrypt = require("bcryptjs");
 router.post("/signup", async (req, res) => {
   const User = new userModel(req.body);
   try {
+    const hashedPassword = await bcrypt.hash(User.Password, 12);
+    User.Password = hashedPassword;
     const savedUser = await User.save();
 
     res.status(200).send(savedUser);
@@ -31,8 +33,9 @@ router.post("/login", async (req, res) => {
     }
     user.attempts = 4;
     await user.save();
+    console.log(await bcrypt.compare(req.body.Password, user.Password));
 
-    if (user.Password !== req.body.Password) {
+    if (!(await bcrypt.compare(req.body.Password, user.Password))) {
       if (attempts - 1 <= 0) {
         //account lock for 30mins
         const currDate = new Date();
