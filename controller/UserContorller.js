@@ -2,25 +2,6 @@ const movieModel = require("../model/Movie");
 const userModel = require("../model/User");
 const bcrypt = require("bcryptjs");
 
-const UpdateRating = async (item) => {
-  console.log(item._id);
-  Favorite_id.push(item._id);
-  try {
-    const movie = await movieModel.findOne({ _id: item._id });
-
-    const newRating =
-      (movie.AverageRatings * movie.NumberOfRatings + item.rating) /
-      (movie.NumberOfRatings + 1);
-
-    console.log("new rat", newRating);
-    movie.AverageRatings = newRating;
-    movie.NumberOfRatings++;
-    await movie.save();
-  } catch (error) {
-    console.log(error.message);
-  }
-};
-
 const RemainingTime = (currDate, futureDate) => {
   var diff = futureDate - currDate;
   return Math.floor(diff / 1000 / 60);
@@ -31,7 +12,24 @@ const RegisterUser = async (req, res) => {
 
   var Favorite_id = [];
   try {
-    Favorites.map((item) => UpdateRating(item));
+    Favorites.map(async (item) => {
+      console.log(item._id);
+      Favorite_id.push(item._id);
+      try {
+        const movie = await movieModel.findOne({ _id: item._id });
+
+        const newRating =
+          (movie.AverageRatings * movie.NumberOfRatings + item.rating) /
+          (movie.NumberOfRatings + 1);
+
+        console.log("new rat", newRating);
+        movie.AverageRatings = newRating;
+        movie.NumberOfRatings++;
+        await movie.save();
+      } catch (error) {
+        console.log(error.message);
+      }
+    });
 
     const User = new userModel(req.body);
     User.Favorites = Favorite_id;
@@ -95,7 +93,9 @@ const LoginUser = async (req, res) => {
     }
     user.LockinTime = null; //remove the lockin time if successfull login
     await user.save();
-    return res.status(200).json(user);
+    return res
+      .status(200)
+      .json({ message: "User Logged in Succesfully", data: user });
   } catch (error) {
     return res.status(500).json(error.message);
   }
