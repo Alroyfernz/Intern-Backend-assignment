@@ -14,15 +14,17 @@ router.post("/signup", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const user = await userModel.findOne({ Email: req.body.Email });
+    const user = await userModel
+      .findOne({ Email: req.body.Email })
+      .populate("Favorites");
     if (!user)
       return res.status(404).json("No user found with the email address");
     const { attempts } = user;
     //check if lockin time is gretaer than 30 mins
     if (user.LockinTime != null) {
       const laterDate = user.LockinTime;
-      const after = new Date(new Date(laterDate).getTime() + 1 * 60000);
-      console.log(after.getMinutes());
+      const after = new Date(new Date(laterDate).getTime() + 30 * 60000);
+      //   console.log(after.getMinutes());
       if (new Date().getTime() < after.getTime()) {
         return res.status(404).json("your account is locked for 30 mins..");
       }

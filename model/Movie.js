@@ -10,6 +10,7 @@ const MovieSchema = new Schema({
   AverageRatings: {
     type: Number,
     default: 0,
+    max: 5,
   },
   NumberOfRatings: {
     type: Number,
