@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const movieModel = require("../model/Movie");
 router.post("/addMovie", async (req, res) => {
+  console.log(req.body);
   try {
     const newMovie = new movieModel(req.body);
     await newMovie.save();
@@ -25,6 +26,18 @@ router.post("/editMovie/:id", async (req, res) => {
     return res.json("movie rating updated");
   } catch (error) {
     return res.status(404).json(error.message);
+  }
+});
+
+router.get("/fetchMovie", async (req, res) => {
+  const { term } = req.query;
+  try {
+    const movie = await movieModel.find({
+      MovieName: { $regex: term, $options: "i" },
+    });
+    return res.status(200).json(movie);
+  } catch (error) {
+    return res.status(500).json(error.message);
   }
 });
 
