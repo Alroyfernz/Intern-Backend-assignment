@@ -1,44 +1,15 @@
 const router = require("express").Router();
-const movieModel = require("../model/Movie");
-router.post("/addMovie", async (req, res) => {
-  console.log(req.body);
-  try {
-    const newMovie = new movieModel(req.body);
-    await newMovie.save();
-    return res.status(200).json("Movie saved succesfully");
-  } catch (error) {
-    return res.status(500).json(error.message);
-  }
-});
+const {
+  CreateMovie,
+  EditMovie,
+  FetchMovie,
+} = require("../controller/MovieController");
 
-router.post("/editMovie/:id", async (req, res) => {
-  try {
-    const movie = await movieModel.findOne({ _id: req.params.id });
-    const { rating } = req.body;
-    const newRating =
-      (movie.AverageRatings * movie.NumberOfRatings + rating) /
-      (movie.NumberOfRatings + 1);
+const { CREATE_MOVIE, EDIT_MOVIE, FETCH_MOVIE } = require("../helper/url_cons");
+router.post(CREATE_MOVIE, CreateMovie);
 
-    console.log("new rat", newRating);
-    movie.AverageRatings = newRating;
-    movie.NumberOfRatings++;
-    await movie.save();
-    return res.json("movie rating updated");
-  } catch (error) {
-    return res.status(404).json(error.message);
-  }
-});
+router.post(EDIT_MOVIE, EditMovie);
 
-router.get("/fetchMovie", async (req, res) => {
-  const { term } = req.query;
-  try {
-    const movie = await movieModel.find({
-      MovieName: { $regex: term, $options: "i" },
-    });
-    return res.status(200).json(movie);
-  } catch (error) {
-    return res.status(500).json(error.message);
-  }
-});
+router.get(FETCH_MOVIE, FetchMovie);
 
 module.exports = router;
